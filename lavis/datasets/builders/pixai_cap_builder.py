@@ -24,7 +24,7 @@ class PixAICaptionBuilder(BaseDatasetBuilder):
         ann_info = build_info.annotations
         vis_info = build_info.get(self.data_type)
 
-        default_question = self.config.get('question', None)
+        default_prompt = self.config.get('prompt', None)
 
         datasets = dict()
         for split in ann_info.keys():
@@ -69,13 +69,13 @@ class PixAICaptionBuilder(BaseDatasetBuilder):
 
             # create datasets
             dataset_cls = self.train_dataset_cls if is_train else self.eval_dataset_cls
-            question = ann_info.get(split).get('question', default_question)
+            prompt = ann_info.get(split).get('prompt', default_prompt)
             datasets[split] = dataset_cls(
                 vis_processor=vis_processor,
                 text_processor=text_processor,
                 ann_paths=ann_paths,
                 vis_root=vis_path,
-                question=question,
+                prompt=prompt,
             )
 
         return datasets

@@ -45,14 +45,14 @@ def pick_data(record):
 class PixAICaptionDataset(BaseDataset):
 
     def __init__(self, vis_processor, text_processor, vis_root, ann_paths,
-                 question, nsfw_prob=0):
+                 prompt, nsfw_prob=0):
         super().__init__(vis_processor, text_processor, vis_root, ann_paths)
         self.nsfw_prob = nsfw_prob
         annotations = []
         for anno in self.annotation:
             annotations.append(pick_data(anno))
         self.annotation = annotations
-        self.question = question
+        self.prompt = prompt
 
     def load_datainfo(self):
         annotations = []
@@ -86,13 +86,13 @@ class PixAICaptionDataset(BaseDataset):
         img = osp.join(self.vis_root, f'{id_}.webp')
         image = Image.open(img).convert("RGB")
         # <<< just for test
-        # image = Image.new("RGB", (512, 512), (255, 255, 255))
+        # image = Image.open('docs/_static/Confusing-Pictures.jpg')
         image = self.vis_processor(image)
 
         pre_prompt = ann['preferred_prompt'][0].split(',')[0]
         answers = [pre_prompt]
 
-        question = self.question
+        prompt = self.prompt
 
         answer_weight = {}
         for answer in answers:
@@ -106,7 +106,7 @@ class PixAICaptionDataset(BaseDataset):
 
         return {
             "image": image,
-            "text_input": question,
+            "text_input": prompt,
             "text_output": answers,
             "weights": weights,
         }
