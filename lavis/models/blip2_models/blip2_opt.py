@@ -59,7 +59,7 @@ class Blip2OPT(Blip2Base):
         super().__init__()
         transformers_version = version.parse(transformers.__version__)
         assert transformers_version >= version.parse("4.27"), "BLIP-2 OPT requires transformers>=4.27"
-        
+
         self.tokenizer = self.init_tokenizer()
 
         self.visual_encoder, self.ln_vision = self.init_vision_encoder(
@@ -100,9 +100,9 @@ class Blip2OPT(Blip2Base):
         self.prompt = prompt
         prompt_tokens = self.opt_tokenizer(self.prompt, return_tensors="pt")
         self.prompt_length = prompt_tokens.attention_mask.sum(1)
-        
+
         self._apply_lemmatizer = apply_lemmatizer
-        self._lemmatizer = None       
+        self._lemmatizer = None
 
     def forward(self, samples):
         image = samples["image"]
@@ -224,13 +224,13 @@ class Blip2OPT(Blip2Base):
                 max_length=self.max_txt_len,
             ).to(image.device)
             attention_mask = torch.cat([atts_opt, opt_tokens.attention_mask], dim=1)
-            
+
             # new version for transformers>=4.27
             inputs_embeds = self.opt_model.get_input_embeddings()(opt_tokens.input_ids)
             inputs_embeds = torch.cat([inputs_opt,inputs_embeds],dim=1)
-            
+
             outputs = self.opt_model.generate(
-                inputs_embeds=inputs_embeds, 
+                inputs_embeds=inputs_embeds,
                 attention_mask=attention_mask,
                 do_sample=use_nucleus_sampling,
                 top_p=top_p,
@@ -246,7 +246,7 @@ class Blip2OPT(Blip2Base):
             output_text = self.opt_tokenizer.batch_decode(
                 outputs, skip_special_tokens=True
             )
-                            
+
             # previous version for transformers<4.27
             # if use_nucleus_sampling:
             #     query_embeds = inputs_opt.repeat_interleave(num_captions, dim=0)
@@ -274,11 +274,11 @@ class Blip2OPT(Blip2Base):
             # output_text = self.opt_tokenizer.batch_decode(
             #     outputs[:, prompt_length:], skip_special_tokens=True
             # )
-            
+
             output_text = [text.strip() for text in output_text]
             return output_text
-        
-        
+
+
     def predict_answers(
         self,
         samples,
@@ -327,13 +327,13 @@ class Blip2OPT(Blip2Base):
                 truncation=True,
                 max_length=self.max_txt_len,
             ).to(image.device)
-        
+
             attention_mask = torch.cat([atts_opt, opt_tokens.attention_mask], dim=1)
-            
+
             # require transformers>=4.27
             inputs_embeds = self.opt_model.get_input_embeddings()(opt_tokens.input_ids)
             inputs_embeds = torch.cat([inputs_opt,inputs_embeds],dim=1)
-            
+
             outputs = self.opt_model.generate(
                 inputs_embeds=inputs_embeds,
                 attention_mask=attention_mask,
@@ -352,7 +352,7 @@ class Blip2OPT(Blip2Base):
             output_text = self._lemmatize(output_text)
 
         return output_text
-    
+
     def _lemmatize(self, answers):
         def apply(answer):
             doc = self.lemmatizer(answer)
@@ -389,7 +389,7 @@ class Blip2OPT(Blip2Base):
                 exit(1)
 
         return self._lemmatizer
-        
+
     @classmethod
     def from_config(cls, cfg):
         vit_model = cfg.get("vit_model", "eva_clip_g")
@@ -404,7 +404,7 @@ class Blip2OPT(Blip2Base):
 
         prompt = cfg.get("prompt", "")
         max_txt_len = cfg.get("max_txt_len", 32)
-        
+
         apply_lemmatizer = cfg.get("apply_lemmatizer", False)
 
         model = cls(

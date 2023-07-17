@@ -52,29 +52,31 @@ class PixAICaptionDataset(BaseDataset):
         for anno in self.annotation:
             annotations.append(pick_data(anno))
         self.annotation = annotations
+        self.load_datainfo()
         self.prompt = prompt
 
     def load_datainfo(self):
         annotations = []
-        for anno in self.annotation:
-            data_info = pick_data(anno)
+        for data_info in self.annotation:
             is_nsfw = data_info['is_nsfw']
             rand = np.random.randn()
             if is_nsfw and rand > self.nsfw_prob:
                 # skip for nsfw
                 continue
-            if not anno['preferred_prompt']:
+            if not data_info['preferred_prompt']:
                 # skip for no preferred prompt
                 continue
 
-            if len(anno['disliked_prompt']) != 3:
+            if len(data_info['disliked_prompt']) != 3:
                 # skip for dislike prompts not equal to 3
                 continue
 
-            id_ = anno["media_id"]
-            if not osp.exists(self.vis_root, f'{id_}.webp'):
+            id_ = data_info["media_id"]
+            if not osp.exists(osp.join(self.vis_root, f'{id_}.webp')):
                 # skip for no data
                 continue
+
+            annotations.append(deepcopy(data_info))
 
         self.annotation = annotations
 
@@ -90,23 +92,26 @@ class PixAICaptionDataset(BaseDataset):
         image = self.vis_processor(image)
 
         pre_prompt = ann['preferred_prompt'][0].split(',')[0]
-        answers = [pre_prompt]
+        # answers = [pre_prompt]
 
-        prompt = self.prompt
+        # prompt = self.prompt
 
-        answer_weight = {}
-        for answer in answers:
-            if answer in answer_weight.keys():
-                answer_weight[answer] += 1 / len(answers)
-            else:
-                answer_weight[answer] = 1 / len(answers)
+        # answer_weight = {}
+        # for answer in answers:
+        #     if answer in answer_weight.keys():
+        #         answer_weight[answer] += 1 / len(answers)
+        #     else:
+        #         answer_weight[answer] = 1 / len(answers)
 
-        answers = list(answer_weight.keys())
-        weights = list(answer_weight.values())
+        # answers = list(answer_weight.keys())
+        # weights = list(answer_weight.values())
+
+        caption = self.text_processor(pre_prompt)
 
         return {
             "image": image,
-            "text_input": prompt,
-            "text_output": answers,
-            "weights": weights,
+            # "text_input": prompt,
+            "text_input": caption,
+            # "text_output": answers,
+            # "weights": weights,
         }

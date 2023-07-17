@@ -309,7 +309,7 @@ class Blip2T5Instruct(Blip2Base):
             prompt = [p.format(', '.join(samples['ocr_tokens'][i][:30])) for i, p in enumerate(prompt)]
 
         query_tokens = self.query_tokens.expand(bs, -1, -1)
-        if self.qformer_text_input:
+        if self.qformer_text_input:  # NOTE: --> sir, this way
             # remove ocr tokens in q_former (for eval textvqa)
             # qformer_prompt = prompt
             # qformer_prompt = ['Question: ' + qp.split(' Question: ')[1] for qp in qformer_prompt]
@@ -356,12 +356,12 @@ class Blip2T5Instruct(Blip2Base):
                 atts_t5.append(frame_atts_t5)
             inputs_t5 = torch.cat(inputs_t5, dim=1)
             atts_t5 = torch.cat(atts_t5, dim=1)
-        else:
+        else:  # NOTE: --> sir, this way
             with self.maybe_autocast():
                 image_embeds = self.ln_vision(self.visual_encoder(image))
             image_atts = torch.ones(image_embeds.size()[:-1], dtype=torch.long).to(image.device)
 
-            if self.qformer_text_input:
+            if self.qformer_text_input:  # NOTE: --> sir, this way
                 query_output = self.Qformer.bert(
                     text_Qformer.input_ids,
                     attention_mask=Qformer_atts,

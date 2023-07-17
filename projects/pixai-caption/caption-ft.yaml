@@ -5,10 +5,10 @@
 
 model:
   arch: blip2_opt
-  model_type: caption_coco_opt2.7b
+  model_type: caption_coco_opt6.7b
   load_finetuned: False
   use_grad_checkpoint: True
-  freeze_vit: False
+  freeze_vit: True
 
 datasets:
   PixAICaption: # name of the dataset builder
