@@ -45,7 +45,7 @@ def pick_data(record):
 class PixAICaptionDataset(BaseDataset):
 
     def __init__(self, vis_processor, text_processor, vis_root, ann_paths,
-                 prompt, nsfw_prob=0):
+                 prompt, new_prompt_anno=None, nsfw_prob=0):
         super().__init__(vis_processor, text_processor, vis_root, ann_paths)
         self.nsfw_prob = nsfw_prob
         annotations = []
@@ -54,6 +54,34 @@ class PixAICaptionDataset(BaseDataset):
         self.annotation = annotations
         self.load_datainfo()
         self.prompt = prompt
+
+        self.new_prompt = self.load_new_prompt_anno(new_prompt_anno)
+
+    def load_new_prompt_anno(self, anno_file):
+        if anno_file is None:
+            return dict()
+
+        new_data = []
+
+        with open(anno_file) as file:
+            annos = file.readlines()
+
+        for idx, anno in enumerate(annos):
+            anno = anno.strip()
+
+            if '###' not in anno:
+                new_data[-1] = new_data[-1] + anno
+
+            else:
+                new_data.append(anno)
+
+        new_data_dict = dict()
+        for data in new_data:
+            id_, prompt = data.split('###')
+            id_ = id_.strip()
+            new_data_dict[id_] = prompt.split('A:')[1].strip()
+
+        return new_data_dict
 
     def load_datainfo(self):
         annotations = []
@@ -91,7 +119,11 @@ class PixAICaptionDataset(BaseDataset):
         # image = Image.open('docs/_static/Confusing-Pictures.jpg')
         image = self.vis_processor(image)
 
-        pre_prompt = ann['preferred_prompt'][0].split(',')[0]
+        if id_ not in self.new_prompt:
+            pre_prompt = ann['preferred_prompt'][0].split(',')[0]
+        else:
+            pre_prompt = self.new_prompt[id_]
+
         # answers = [pre_prompt]
 
         # prompt = self.prompt

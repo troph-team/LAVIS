@@ -76,6 +76,7 @@ class PixAICaptionBuilder(BaseDatasetBuilder):
                 ann_paths=ann_paths,
                 vis_root=vis_path,
                 prompt=prompt,
+                new_prompt_anno=build_info.get('new_prompt_anno', None)
             )
 
         return datasets
